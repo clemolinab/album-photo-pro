@@ -88,7 +88,7 @@ export async function canvaUploadAsset(
       "Content-Type": "application/octet-stream",
       "Asset-Upload-Metadata": JSON.stringify({ name_base64: Buffer.from(name).toString("base64") }),
     },
-    body: imageBuffer,
+    body: new Uint8Array(imageBuffer),
   });
   if (!res.ok) throw new Error(`Canva upload error ${res.status}`);
   const data = await res.json();
