@@ -176,7 +176,7 @@ async function embedImage(pdf: PDFDocument, filePath: string) {
     // Normalizar a JPG para consistencia e insertar.
     const buf = await fs.readFile(filePath);
     const meta = await sharp(buf).metadata();
-    let jpg = buf;
+    let jpg: Uint8Array = buf;;
     if (meta.format !== "jpeg") {
       jpg = await sharp(buf).jpeg({ quality: 92 }).toBuffer();
     }
