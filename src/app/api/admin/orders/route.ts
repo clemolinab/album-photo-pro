@@ -5,6 +5,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { listOrders, listProjects } from "@/lib/db";
+import { publicFileUrl } from "@/lib/storage";
 
 export const runtime = "nodejs";
 
@@ -23,7 +24,7 @@ export async function GET(req: NextRequest) {
     return {
       ...o,
       pageCount: p?.pageCount,
-      pdfUrl: p?.pdfPath ? `/albums/${p.id}.pdf` : null,
+      pdfUrl: p?.pdfPath ? publicFileUrl("albums", `${p.id}.pdf`) : null,
     };
   });
   return NextResponse.json({ orders: joined });

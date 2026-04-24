@@ -9,13 +9,12 @@
  * Devuelve { projectId, pdfUrl, pageCount }
  */
 import { NextRequest, NextResponse } from "next/server";
-import path from "path";
-import fs from "fs/promises";
 import { v4 as uuid } from "uuid";
 import { buildAlbumPdf } from "@/lib/pdf";
 import { canvaConfigured } from "@/lib/canva";
 import { saveProject, AlbumImage } from "@/lib/db";
 import { calcPrice } from "@/lib/pricing";
+import { ensureStorageDir, publicFileUrl, storagePath } from "@/lib/storage";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -30,9 +29,9 @@ export async function POST(req: NextRequest) {
     }
 
     const projectId = uuid();
-    const pdfsDir = path.join(process.cwd(), "public", "albums");
-    await fs.mkdir(pdfsDir, { recursive: true });
-    const pdfPath = path.join(pdfsDir, `${projectId}.pdf`);
+    await ensureStorageDir("albums");
+    const filename = `${projectId}.pdf`;
+    const pdfPath = storagePath("albums", filename);
 
     // Por ahora, generamos siempre el PDF local (es lo más fiable).
     // Si canvaConfigured() está activo Y el vendedor ya autorizó su cuenta,
@@ -58,7 +57,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       projectId,
-      pdfUrl: `/albums/${projectId}.pdf`,
+      pdfUrl: publicFileUrl("albums", filename),
       pageCount,
       priceCLP: price,
       designProvider: canvaConfigured() ? "canva+pdf-fallback" : "pdf-lib",

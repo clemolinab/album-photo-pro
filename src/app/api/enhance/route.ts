@@ -2,12 +2,11 @@
  * POST /api/enhance
  * Body: { files: [{ id, originalPath, url }] }
  * Llama a Replicate (Real-ESRGAN) para mejorar cada imagen y guarda
- * los resultados en /public/enhanced/.
+ * los resultados en /tmp/album-photo-pro/enhanced/.
  */
 import { NextRequest, NextResponse } from "next/server";
-import path from "path";
-import fs from "fs/promises";
 import { enhanceImage } from "@/lib/replicate";
+import { ensureStorageDir, publicFileUrl, storagePath } from "@/lib/storage";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -19,17 +18,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No files" }, { status: 400 });
     }
 
-    const outDir = path.join(process.cwd(), "public", "enhanced");
-    await fs.mkdir(outDir, { recursive: true });
+    await ensureStorageDir("enhanced");
 
     const results = [];
     for (const f of files) {
-      const outFile = path.join(outDir, `${f.id}.jpg`);
+      const filename = `${f.id}.jpg`;
+      const outFile = storagePath("enhanced", filename);
       const res = await enhanceImage(f.originalPath, outFile);
       results.push({
         ...f,
         enhancedPath: res.outputPath,
-        enhancedUrl: `/enhanced/${f.id}.jpg`,
+        enhancedUrl: publicFileUrl("enhanced", filename),
         provider: res.provider,
         model: res.enhancedWith,
       });

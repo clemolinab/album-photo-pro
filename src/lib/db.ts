@@ -1,13 +1,16 @@
 /**
- * db.ts — Base de datos simple en JSON (file-based).
- * Para producción, reemplaza por Postgres/Prisma/Supabase.
+ * db.ts — Base de datos simple en JSON (file-based) sobre /tmp/.
+ *
+ * IMPORTANTE: en Vercel /tmp/ es ephemeral — los datos se borran
+ * cuando la función serverless se recicla (~minutos). Está OK para
+ * un demo, pero para producción real reemplaza por Postgres,
+ * Supabase, o Vercel KV.
  */
 import fs from "fs/promises";
-import path from "path";
+import { ensureStorageDir, storagePath } from "./storage";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const ORDERS_FILE = path.join(DATA_DIR, "orders.json");
-const PROJECTS_FILE = path.join(DATA_DIR, "projects.json");
+const ORDERS_FILE = storagePath("data", "orders.json");
+const PROJECTS_FILE = storagePath("data", "projects.json");
 
 export type AlbumImage = {
   id: string;
@@ -58,7 +61,7 @@ export type Order = {
 };
 
 async function ensureFile(file: string, initial: string) {
-  await fs.mkdir(DATA_DIR, { recursive: true });
+  await ensureStorageDir("data");
   try {
     await fs.access(file);
   } catch {
@@ -77,7 +80,7 @@ async function readJson<T>(file: string, initial: T): Promise<T> {
 }
 
 async function writeJson<T>(file: string, data: T) {
-  await fs.mkdir(DATA_DIR, { recursive: true });
+  await ensureStorageDir("data");
   await fs.writeFile(file, JSON.stringify(data, null, 2), "utf-8");
 }
 
